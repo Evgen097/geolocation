@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="positionText"></div>
+
+<script>
+    // После его установки запустите, browser-sync start --server --https и
+    // у вас будет локальный сервер HTTPS.
+    //
+    // Многие API требуют HTTPS, поэтому я использую Browser Sync для всей моей работы
+    // за пределами Treehouse. Чтобы обойти ограничение использования ресурсов
+    // Cross Origin для многих API, вы можете добавить --corsфлаг при запуске
+    // Browser Sync.
+
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        console.log(position.coords.latitude, position.coords.longitude);
+    });
+
+    // Кладем в переменную адрес <div> для вывода текста
+    var posText = document.getElementById("positionText");
+    function getLocation() {
+        if (navigator.geolocation) {
+            // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
+            navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+            // Если нет, выводим сообщение об ошибке
+            posText.innerHTML = "Этот браузер не может определять местоположение";
+        }
+    }
+    function showPosition(position) {
+        // Выводим широту и долготу на страницу
+        posText.innerHTML = "Широта: " + position.coords.latitude +
+            "<br>Долгота: " + position.coords.longitude;
+    }
+    getLocation()
+    // showPosition(position)
+
+</script>
+<script id="__bs_script__">//<![CDATA[
+document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.26.3'><\/script>".replace("HOST", location.hostname));
+//]]></script>
+
+</body>
+</html>
