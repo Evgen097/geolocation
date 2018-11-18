@@ -29,18 +29,23 @@
         .gun{
 
         }
+        .explode{
 
-        .expl:after{
+        }
+        .explode:after{
+            display: block;
+            width: 30px;
+            height: 30px;
             content: "💥";
         }
 
-        .gun:before {
+        .gunleft:before {
             display: block;
             content: "🔫";
             margin-left: -30px;
         }
 
-        .gun:after {
+        .gunright:after {
             display: block;
             content: "🔫";
             margin-left: 60px;
@@ -66,8 +71,9 @@
 <script>
     var map;
     var ufos = [];
-    var ufoSpreading = 30;
-    var centerCoordinates = [0,0]
+    var ufoSpreading = 10;
+    var valueCollision = 0.0002;
+    var centerCoordinates = [0,0];
     var count = 0;
     var step = 0.00005;
     var smileSide = 0;
@@ -122,20 +128,7 @@
     }
 
     var geojsonGun = {
-        type: 'FeatureCollection',
-        features: [
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [36.386859, 49.926677]
-                },
-                properties: {
-                    title: 'Mapbox',
-                    description: 'Gun'
-                },
-            }
-        ]
+        coordinates: [36.386859, 49.926677]
     };
 
 
@@ -159,12 +152,30 @@
         });
     };
 
+
+    function checkCollision(gun, el) {
+        ufos.forEach( ufo =>{
+            if(  Math.abs((gun.coordinates[0] - ufo.coordinates[0])) < valueCollision &&
+                Math.abs((gun.coordinates[1] - ufo.coordinates[1])) < valueCollision){
+                killUfo(ufo);
+
+                if(  (gun.coordinates[0] > ufo.coordinates[0])){
+                    el.classList.add('gunleft')
+                }else {
+                    el.classList.add('gunright')
+                }
+            }
+        })
+    }
+
+
     var moveGun = ()=>{
         if (navigator.geolocation) {
             // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
             navigator.geolocation.getCurrentPosition(function(position) {
-                geojsonGun.features[0].geometry.coordinates[0] = position.coords.longitude;
-                geojsonGun.features[0].geometry.coordinates[1] = position.coords.latitude;
+                geojsonGun.coordinates[0] = position.coords.longitude;
+                geojsonGun.coordinates[1] = position.coords.latitude;
+
                 var el = document.createElement('div');
                 el.className = 'marker gun em em-confused';
 
@@ -175,13 +186,14 @@
                     el.className = 'marker gun em em-face_with_raised_eyebrow';
                     smileSide = 0;
                 };
+                checkCollision(geojsonGun, el)
 
                 new mapboxgl.Marker(el)
-                    .setLngLat(geojsonGun.features[0].geometry.coordinates)
+                    .setLngLat(geojsonGun.coordinates)
                     .addTo(map);
 
-                posText.innerHTML = 'X: ' + geojsonGun.features[0].geometry.coordinates[0]
-                    + "</br>" + 'Y: ' +  geojsonGun.features[0].geometry.coordinates[1];
+                posText.innerHTML = 'X: ' + geojsonGun.coordinates[0]
+                    + "</br>" + 'Y: ' +  geojsonGun.coordinates[1];
 
             });
         } else {
@@ -190,8 +202,6 @@
         }
 
     };
-
-
 
 
     function randomInteger(min, max) {
@@ -234,36 +244,47 @@
             }else {
                 item.coordinates[1] -= step;
             }
-
-
-            // if(index < ufos.length/2){
-            //     item.coordinates[0] += step;
-            // }else {
-            //     item.coordinates[1] -= step;
-            // }
         })
 
         ufos.forEach( ufo =>{
             var el = document.createElement('div');
             el.className = 'marker em em-alien';
+            el.dataset.id = ufo.id;
             new mapboxgl.Marker(el)
                 .setLngLat(ufo.coordinates)
                 .addTo(map);
         } )
     }
 
-    // initMap();
-    // setTimeout( ()=>{
-    //     createUfos()
-    // }, 1900 )
-    //
-    // setInterval( ()=>{
-    //     // addUfo()
-    //     removeEmoji();
-    //     moveUfos();
-    //     moveGun();
-    //     // changeSmileSide();
-    // }, 2000 )
+    initMap();
+    setTimeout( ()=>{
+        createUfos()
+    }, 1900 )
+
+    function addUfo(id) {
+        ufos.push({id: id, coordinates: createUfoCoord() })
+    }
+
+    function killUfo(ufo){
+        var ufoDIV = document.querySelector(`[data-id="${ufo.id}"]`);
+        ufoDIV.style.width = '0px';
+        ufoDIV.style.height = '0px';
+        ufoDIV.classList.add('explode');
+        ufos = ufos.filter( elem => {
+            return elem.id != ufo.id;
+        });
+        addUfo(ufo.id)
+        // console.log(ufos)
+    }
+
+    setInterval( ()=>{
+        // addUfo()
+        removeEmoji();
+        moveUfos();
+        moveGun();
+        // killUfo(ufos[0])
+        // changeSmileSide();
+    }, 2000 )
 
 
 </script>
