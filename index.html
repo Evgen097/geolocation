@@ -24,7 +24,27 @@
             height: 25px;
             border-radius: 50%;
             cursor: pointer;
-            /*left: 0px;*/
+        }
+
+        .gun{
+
+        }
+
+        .expl:after{
+            content: "💥";
+        }
+
+        .gun:before {
+            display: block;
+            content: "🔫";
+            margin-left: -30px;
+        }
+
+        .gun:after {
+            display: block;
+            content: "🔫";
+            margin-left: 60px;
+            transform: scale(-1, 1);
         }
 
     </style>
@@ -36,11 +56,52 @@
 <!--<div class="marker em gun em-confused"></div>-->
 <!--<i class="em em-confused"></i>-->
 
+<div style="margin: 100px" class="marker gun em em-alien"></div>
+
 <div id='map' style='width: 800px; height: 700px;'></div>
 <div id="positionText" style="margin: 10px">Coordinates</div>
+
 <script src='config.js'></script>
 
 <script>
+    var map;
+    var ufos = [];
+    var ufoSpreading = 30;
+    var centerCoordinates = [0,0]
+    var count = 0;
+    var step = 0.00005;
+    var smileSide = 0;
+    var posText = document.getElementById("positionText");
+
+    function createMap(x, y){
+        mapboxgl.accessToken = accessToken;
+        map = new mapboxgl.Map({
+            container: 'map',
+            style: mapboxStyle,
+            center: [x, y],
+            zoom: 17
+        });
+    }
+
+    function initMap() {
+        if (navigator.geolocation) {
+            // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
+            navigator.geolocation.getCurrentPosition(function(position) {
+                centerCoordinates[0] = position.coords.longitude;
+                centerCoordinates[1] = position.coords.latitude;
+                createMap(position.coords.longitude, position.coords.latitude)
+            });
+        } else {
+            // Если нет, выводим сообщение об ошибке
+            posText.innerHTML = "Этот браузер не может определять местоположение";
+            centerCoordinates[0] = 0;
+            centerCoordinates[1] = 0;
+        }
+    };
+
+    // initMap();
+
+
 
     var changeSmileSide = ()=> {
         var el = document.querySelector('.em-confused');
@@ -52,13 +113,6 @@
             smileSide = 0;
         };
     };
-
-
-    var count = 0;
-    var step = 0.00005;
-    var smileSide = 0;
-    var posText = document.getElementById("positionText");
-
 
     var removeEmoji = ()=> {
         var emojis = Array.from(document.querySelectorAll('.marker'));
@@ -84,64 +138,6 @@
         ]
     };
 
-    var geojson = {
-        type: 'FeatureCollection',
-        features: [
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [36.383519, 49.926677]
-                },
-                properties: {
-                    title: 'Mapbox',
-                    description: 'Enemy 1'
-                },
-            },
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [36.385621, 49.926692]
-                },
-                properties: {
-                    title: 'Mapbox',
-                    description: 'Enemy 2'
-                },
-            },
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [36.387859, 49.926547]
-                },
-                properties: {
-                    title: 'Mapbox',
-                    description: 'Enemy 3'
-                },
-            },
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [36.385203, 49.927737]
-                },
-                properties: {
-                    title: 'Mapbox',
-                    description: 'Enemy 4'
-                },
-            }
-        ]
-    };
-
-    mapboxgl.accessToken = accessToken;
-    var map = new mapboxgl.Map({
-        container: 'map',
-        style: mapboxStyle,
-        center: [ 36.387679, 49.926662],
-        zoom: 17
-    });
-
 
     var moveMarkers = ()=>{
         count++;
@@ -149,12 +145,12 @@
         if(count > 50) step = -0.00005;
         if(count === 100) count = 0;
 
-        geojson.features[0].geometry.coordinates[0] += step;
-        geojson.features[1].geometry.coordinates[0] += step;
-        geojson.features[2].geometry.coordinates[0] -= step;
-        geojson.features[3].geometry.coordinates[1] -= step;
+        ufos.features[0].geometry.coordinates[0] += step;
+        ufos.features[1].geometry.coordinates[0] += step;
+        ufos.features[2].geometry.coordinates[0] -= step;
+        ufos.features[3].geometry.coordinates[1] -= step;
 
-        geojson.features.forEach((marker)=> {
+        ufos.features.forEach((marker)=> {
             var el = document.createElement('div');
             el.className = 'marker em em-alien';
             new mapboxgl.Marker(el)
@@ -170,13 +166,13 @@
                 geojsonGun.features[0].geometry.coordinates[0] = position.coords.longitude;
                 geojsonGun.features[0].geometry.coordinates[1] = position.coords.latitude;
                 var el = document.createElement('div');
-                el.className = 'marker em em-confused';
+                el.className = 'marker gun em em-confused';
 
                 if (smileSide === 0) {
-                    el.className = 'marker em em-confused';
+                    el.className = 'marker gun em em-confused';
                     smileSide = 1;
                 } else {
-                    el.className = 'marker em em-face_with_raised_eyebrow';
+                    el.className = 'marker gun em em-face_with_raised_eyebrow';
                     smileSide = 0;
                 };
 
@@ -195,12 +191,79 @@
 
     };
 
-    setInterval( ()=>{
-        removeEmoji();
-        moveMarkers();
-        moveGun();
-        // changeSmileSide();
-    }, 3000 )
+
+
+
+    function randomInteger(min, max) {
+        var rand = min + Math.random() * (max + 1 - min);
+        rand = Math.floor(rand);
+        return rand;
+    }
+
+    function createUfoCoord() {
+        // 36.388044799999996, 49.931878399999995
+        var x = (((centerCoordinates[0].toFixed(4)))*10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000;
+        var y = (((centerCoordinates[1].toFixed(4)))*10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000
+        // console.log(x, y)
+        return [x, y];
+    }
+
+
+    function createUfos() {
+        // {id: 1, coordinates: [36.3889, 49.9321] },
+        // {id: 2, coordinates: [36.3875, 49.9307] },
+        for (var i=1; i < 20; i++){
+            ufos.push({id: i, coordinates: createUfoCoord() })
+        }
+    }
+
+    function moveUfos(){
+
+        count++;
+        if(count < 50) step = 0.00005;
+        if(count > 50) step = -0.00005;
+        if(count === 100) count = 0;
+        ufos.forEach( (item, index) =>{
+
+            if (index < ufos.length/4){
+                item.coordinates[0] += step;
+            }else if( index < ufos.length/2 ){
+                item.coordinates[0] -= step;
+            }else if( index < (ufos.length - ufos.length/4) ){
+                item.coordinates[1] += step;
+            }else {
+                item.coordinates[1] -= step;
+            }
+
+
+            // if(index < ufos.length/2){
+            //     item.coordinates[0] += step;
+            // }else {
+            //     item.coordinates[1] -= step;
+            // }
+        })
+
+        ufos.forEach( ufo =>{
+            var el = document.createElement('div');
+            el.className = 'marker em em-alien';
+            new mapboxgl.Marker(el)
+                .setLngLat(ufo.coordinates)
+                .addTo(map);
+        } )
+    }
+
+    // initMap();
+    // setTimeout( ()=>{
+    //     createUfos()
+    // }, 1900 )
+    //
+    // setInterval( ()=>{
+    //     // addUfo()
+    //     removeEmoji();
+    //     moveUfos();
+    //     moveGun();
+    //     // changeSmileSide();
+    // }, 2000 )
 
 
 </script>
