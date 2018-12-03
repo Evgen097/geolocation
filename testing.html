@@ -60,14 +60,15 @@
 
 </head>
 <body>
-<!--<span> Geolocation app! </span>-->
-<span id="positionText" style="margin: 10px; font-size: 16px"></span>
+<span> Geolocation app! </span>
+<span id="positionText" style="margin: 10px"></span>
 <!--<div id="positionText"></div>-->
 <!--<div class="marker em gun em-confused"></div>-->
 <!--<i class="em em-confused"></i>-->
 
 <div id='map'></div>
 
+<script src='config.js'></script>
 
 <script>
     var map;
@@ -79,12 +80,8 @@
     var step = 0.00005;
     var smileSide = 0;
     var posText = document.getElementById("positionText");
-    var accessToken = 'pk.eyJ1IjoiZXZnZW4wOTciLCJhIjoiY2pvNzhhY2trMHQ0ZTNxcGFsYWt1bDcwbSJ9.jzkLA3kLYT7k62667orDog';
-    var mapboxStyle = 'mapbox://styles/evgen097/cjog0faf76gvk2snva4npe2jf';
-    var x = 50;
-    var y = 50;
 
-    function createMap(){
+    function createMap(x, y){
         mapboxgl.accessToken = accessToken;
         map = new mapboxgl.Map({
             container: 'map',
@@ -92,24 +89,18 @@
             center: [x, y],
             zoom: 17
         });
-        // console.log(map)
+        console.log(map)
 
     }
 
-
     function initMap() {
-        posText.innerHTML = "Error!!! Включите геолокацию и запустите Google карты для обновления GPS";
         if (navigator.geolocation) {
             // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
             navigator.geolocation.getCurrentPosition(function(position) {
-                centerCoordinates[0] = position.coords.longitude || x;
-                centerCoordinates[1] = position.coords.latitude || y;
-                x = position.coords.longitude || x;
-                y = position.coords.latitude || y;
-
+                centerCoordinates[0] = position.coords.longitude;
+                centerCoordinates[1] = position.coords.latitude;
+                createMap(position.coords.longitude, position.coords.latitude)
                 posText.innerHTML = "Местоположение определено";
-                posText.innerHTML = 'x: ' + x +", y: "+ y;
-                createMap();
             });
         } else {
             // Если нет, выводим сообщение об ошибке
@@ -280,20 +271,15 @@
     }
 
     initMap();
-    // setInterval( ()=>{
-    //     removeEmoji();
-    //     moveUfos();
-    //     moveGun();
-    // }, 1000 )
 
-    var timerId;
-
-    timerId = setTimeout(function tick() {
+    setInterval( ()=>{
+        // addUfo()
         removeEmoji();
         moveUfos();
         moveGun();
-        timerId = setTimeout(tick, 1000)
-    }, 1000);
+        // killUfo(ufos[0])
+        // changeSmileSide();
+    }, 2000 )
 
 
 </script>
